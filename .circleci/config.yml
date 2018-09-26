@@ -48,12 +48,14 @@ env-arm: &env-arm
   GN_EXTRA_ARGS: 'target_cpu = "arm"'
   MKSNAPSHOT_TOOLCHAIN: //build/toolchain/linux:clang_arm
   BUILD_NATIVE_MKSNAPSHOT: 1
+  ARM_ARCH: arm
 
 env-arm64: &env-arm64
   GCLIENT_EXTRA_ARGS: '--custom-var=checkout_arm64=True'
   GN_EXTRA_ARGS: 'target_cpu = "arm64" fatal_linker_warnings = false enable_linux_installer = false'
   MKSNAPSHOT_TOOLCHAIN: //build/toolchain/linux:clang_arm64
   BUILD_NATIVE_MKSNAPSHOT: 1
+  ARM_ARCH: arm64
 
 env-mas: &env-mas
   GN_EXTRA_ARGS: 'is_mas_build = true'
@@ -298,6 +300,16 @@ step-native-mksnapshot-store: &step-native-mksnapshot-store
     path: src/out/native_mksnapshot/native_mksnapshot.zip
     destination: native_mksnapshot.zip
 
+step-maybe-trigger-arm-test: &step-maybe-trigger-arm-test
+  run:
+    name: Trigger an arm test on VSTS if applicable
+    command: |
+      # Only run for non-fork prs
+      if [ "$TRIGGER_ARM_TEST" == "true" ] && [ -z "$CIRCLE_PR_NUMBER" ]; then
+        #Trigger VSTS job, passing along CircleCI job number and branch to build
+        echo "Triggering electron-$ARM_ARCH-testing build on VSTS"
+        node script/ci-release-build.js --job=electron-$ARM_ARCH-testing --ci=VSTS --armTest --circleBuildNum=$CIRCLE_BUILD_NUM $CIRCLE_BRANCH
+      fi
 # Lists of steps.
 steps-checkout: &steps-checkout
   steps:
@@ -376,6 +388,8 @@ steps-electron-build-for-tests: &steps-electron-build-for-tests
 
     # Save all data needed for a further tests run.
     - *step-persist-data-for-tests
+
+    - *step-maybe-trigger-arm-test
 
     - *step-maybe-notify-slack-failure
     - *step-maybe-notify-slack-success
@@ -665,6 +679,7 @@ jobs:
     environment:
       <<: *env-arm
       <<: *env-testing-build
+      TRIGGER_ARM_TEST: true
     <<: *steps-electron-build-for-tests
 
   linux-arm-ffmpeg:
@@ -705,6 +720,7 @@ jobs:
     environment:
       <<: *env-arm64
       <<: *env-testing-build
+      TRIGGER_ARM_TEST: true
     <<: *steps-electron-build-for-tests
 
   linux-arm64-ffmpeg:
