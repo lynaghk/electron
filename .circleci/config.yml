@@ -508,7 +508,7 @@ steps-tests: &steps-tests
         command: |
           cd src
           export ELECTRON_OUT_DIR=Default
-          (cd electron && npm run test -- --ci --enable-logging --disable-software-rasterizer)
+          (cd electron && npm run test -- --ci --enable-logging)
 
     - store_test_results:
         path: src/junit
