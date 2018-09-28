@@ -180,6 +180,13 @@ step-nodejs-headers-build: &step-nodejs-headers-build
     command: |
       cd src
       ninja -C out/Default third_party/electron_node:headers
+      cd out/Default/gen
+      zip -r node_headers.zip node_headers
+
+step-nodejs-headers-store: &step-nodejs-headers-store
+  store_artifacts:
+    path: src/out/Default/gen/node_headers.zip
+    destination: node_headers.zip
 
 step-persist-data-for-tests: &step-persist-data-for-tests
   persist_to_workspace:
@@ -384,6 +391,7 @@ steps-electron-build-for-tests: &steps-electron-build-for-tests
 
     # Node.js headers
     - *step-nodejs-headers-build
+    - *step-nodejs-headers-store
 
     - *step-show-sccache-stats
 
@@ -425,6 +433,7 @@ steps-electron-build-for-publish: &steps-electron-build-for-publish
 
     # Node.js headers
     - *step-nodejs-headers-build
+    - *step-nodejs-headers-store
 
 
 steps-native-mksnapshot-build: &steps-native-mksnapshot-build

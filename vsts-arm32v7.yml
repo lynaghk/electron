@@ -23,16 +23,18 @@ jobs:
 
   - bash: |
      export ZIP_DEST=$PWD/src/out/Default
+     export NODE_HEADERS_DEST=$PWD/src/out/Default/gen
      mkdir -p $ZIP_DEST
+     mkdir -p $NODE_HEADERS_DEST
      cd src/electron
-     node --version
      npm install
      node script/download-circleci-artifacts.js --buildNum=$CIRCLE_BUILD_NUM --name=dist.zip --dest=$ZIP_DEST
      cd $ZIP_DEST
      unzip -o dist.zip
-     pwd
-     ls -la
-    displayName: 'Download and unzip dist to test'
+     node script/download-circleci-artifacts.js --buildNum=$CIRCLE_BUILD_NUM --name=node_headers.zip --dest=$NODE_HEADERS_DEST
+     cd $NODE_HEADERS_DEST
+     unzip -o node_headers.zip
+    displayName: 'Download and unzip files for test'
     env:
       CIRCLE_TOKEN: $(CIRCLECI_TOKEN)
 
